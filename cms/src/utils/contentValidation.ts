@@ -16,6 +16,7 @@ import {
 } from './cardGrid'
 import { hasConflictingCtaFlags } from './ctaButtons'
 import { isCtaStripColor } from './ctaStrip'
+import { hasMediaValue } from './mdx'
 
 export interface FieldError {
   path: Array<string | number>
@@ -768,17 +769,44 @@ export function validateAuthorBio(
 }
 
 /**
- * Validate a blog post's Related Articles component (Article Bio itself is
- * validated via {@link validateAuthorBio}). `relatedArticles` is `required`
- * with `min`/`max` of 3 in the content-type schema, so Strapi enforces the
- * count on create; this fills the same partial-update gap as the other
- * validators here (see `validateFaqSections` for the same pattern).
+ * Require the desktop feature image on every blog post except legacy ones.
+ * `featureMedia` and its `image` are both `required` in the schemas, but
+ * Strapi only enforces the component: a `featureMedia` with no `image` is
+ * saved on create and update alike, which is how a post went live without a
+ * feature image (#805).
+ *
+ * Legacy posts are the migrated developer blog posts, which have no feature
+ * image. The admin never sends `legacy` (the field is hidden), but those posts
+ * already carry the fallback image the MDX sync gives them, so they pass.
+ */
+function validateBlogFeatureImage(post: {
+  featureMedia?: { image?: Parameters<typeof hasMediaValue>[0] } | null
+  legacy?: boolean | null
+}): FieldError[] {
+  if (post.legacy === true) return []
+  if (hasMediaValue(post.featureMedia?.image)) return []
+  return [
+    {
+      message: 'Feature Image (Desktop): Image is required',
+      path: post.featureMedia ? ['featureMedia', 'image'] : ['featureMedia']
+    }
+  ]
+}
+
+/**
+ * Validate a blog post's feature image and Related Articles component (Article
+ * Bio itself is validated via {@link validateAuthorBio}). `relatedArticles` is
+ * `required` with `min`/`max` of 3 in the content-type schema, so Strapi
+ * enforces the count on create; this fills the same partial-update gap as the
+ * other validators here (see `validateFaqSections` for the same pattern).
  *
  * Returns a `ValidationError` combining every missing field found, `undefined` otherwise.
  */
 export function validateBlogFields(post: {
   articleBio?: { author: string | null }[]
   relatedArticles?: { slug: string }[]
+  featureMedia?: { image?: Parameters<typeof hasMediaValue>[0] } | null
+  legacy?: boolean | null
 }): errors.ValidationError | undefined {
   const fieldErrors: FieldError[] = []
   const related = post.relatedArticles
@@ -798,6 +826,7 @@ export function validateBlogFields(post: {
       }
     }
   }
+  fieldErrors.push(...validateBlogFeatureImage(post))
 
   return mergeValidationErrors(
     validateAuthorBio(post, 'articleBio'),

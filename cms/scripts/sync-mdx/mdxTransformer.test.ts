@@ -3312,17 +3312,28 @@ describe('buildProfilePayload', () => {
 })
 
 describe('buildBlogPayload', () => {
+  const baseFeatureImage = '/uploads/img/base-feature.jpg'
   const baseBlogFrontmatter = {
     title: 'Test post',
     description: 'A test description',
     date: '2026-06-10',
     locale: 'en',
+    featureImage: baseFeatureImage,
     relatedArticles: ['one', 'two', 'three']
   }
+  const blogFrontmatterWithoutFeatureImage: Record<string, unknown> = {
+    ...baseBlogFrontmatter
+  }
+  delete blogFrontmatterWithoutFeatureImage.featureImage
+
+  // Non-legacy posts need a feature image, so every upload context here
+  // resolves the base one.
+  const createBlogUploadContext = (uploads: Record<string, number> = {}) =>
+    createMockStrapiUploadContext({ [baseFeatureImage]: 1, ...uploads })
 
   describe('featureMedia / thumbnailMedia', () => {
     it('resolves featureImage and featureImageAlt into featureMedia', async () => {
-      const { strapiUploadContext } = createMockStrapiUploadContext({
+      const { strapiUploadContext } = createBlogUploadContext({
         '/uploads/img/feature.jpg': 42
       })
       const mdx = createMdxFile({
@@ -3347,7 +3358,7 @@ describe('buildBlogPayload', () => {
     })
 
     it('patches featureImageMobile upload alt from featureImageMobileAlt', async () => {
-      const { strapiUploadContext } = createMockStrapiUploadContext({
+      const { strapiUploadContext } = createBlogUploadContext({
         '/uploads/img/feature-mobile.jpg': 99
       })
       const mdx = createMdxFile({
@@ -3372,31 +3383,32 @@ describe('buildBlogPayload', () => {
       )
     })
 
-    it('omits featureMedia when featureImage is absent, since Strapi requires the field and rejects null', async () => {
-      const { strapiUploadContext, updatedAltIds } =
-        createMockStrapiUploadContext()
+    it('rejects a non-legacy post without a featureImage', async () => {
+      const { strapiUploadContext } = createBlogUploadContext()
       const mdx = createMdxFile({
         pathSlug: 'test-post',
-        frontmatter: baseBlogFrontmatter
+        frontmatter: blogFrontmatterWithoutFeatureImage
       })
 
       const payload = await buildBlogPayload(
         foundationBlogFrontmatterSchema,
         mdx,
-        strapiUploadContext,
-        updatedAltIds
+        strapiUploadContext
       )
 
-      expect(payload).not.toHaveProperty('featureMedia')
+      expect(payload).toBeInstanceOf(Error)
+      expect((payload as Error).message).toContain(
+        'featureImage is required (only legacy posts may omit it)'
+      )
     })
 
     it('falls back to the tech-thumbnail image when a legacy post has no featureImage', async () => {
-      const { strapiUploadContext } = createMockStrapiUploadContext({
+      const { strapiUploadContext } = createBlogUploadContext({
         '/img/tech-thumbnail.svg': 7
       })
       const mdx = createMdxFile({
         pathSlug: 'test-post',
-        frontmatter: { ...baseBlogFrontmatter, legacy: true }
+        frontmatter: { ...blogFrontmatterWithoutFeatureImage, legacy: true }
       })
 
       const payload = await buildBlogPayload(
@@ -3412,12 +3424,16 @@ describe('buildBlogPayload', () => {
     })
 
     it('falls back to the tech-thumbnail image when a legacy post has an empty-string featureImage', async () => {
-      const { strapiUploadContext } = createMockStrapiUploadContext({
+      const { strapiUploadContext } = createBlogUploadContext({
         '/img/tech-thumbnail.svg': 7
       })
       const mdx = createMdxFile({
         pathSlug: 'test-post',
-        frontmatter: { ...baseBlogFrontmatter, legacy: true, featureImage: '' }
+        frontmatter: {
+          ...blogFrontmatterWithoutFeatureImage,
+          legacy: true,
+          featureImage: ''
+        }
       })
 
       const payload = await buildBlogPayload(
@@ -3433,10 +3449,9 @@ describe('buildBlogPayload', () => {
     })
 
     it('resolves thumbnailImage and thumbnailImageAlt into thumbnailMedia', async () => {
-      const { strapiUploadContext, updatedAltIds } =
-        createMockStrapiUploadContext({
-          '/uploads/img/thumb.jpg': 84
-        })
+      const { strapiUploadContext, updatedAltIds } = createBlogUploadContext({
+        '/uploads/img/thumb.jpg': 84
+      })
       const mdx = createMdxFile({
         pathSlug: 'test-post',
         frontmatter: {
@@ -3460,8 +3475,7 @@ describe('buildBlogPayload', () => {
     })
 
     it('sets thumbnailMedia to null when thumbnailImage is absent, clearing any existing Strapi value', async () => {
-      const { strapiUploadContext, updatedAltIds } =
-        createMockStrapiUploadContext()
+      const { strapiUploadContext, updatedAltIds } = createBlogUploadContext()
       const mdx = createMdxFile({
         pathSlug: 'test-post',
         frontmatter: baseBlogFrontmatter
@@ -3481,10 +3495,9 @@ describe('buildBlogPayload', () => {
 
   describe('articleBio media', () => {
     it('resolves bio.image and bio.imageAlt into media', async () => {
-      const { strapiUploadContext, updatedAltIds } =
-        createMockStrapiUploadContext({
-          '/uploads/img/jane.jpg': 7
-        })
+      const { strapiUploadContext, updatedAltIds } = createBlogUploadContext({
+        '/uploads/img/jane.jpg': 7
+      })
       const mdx = createMdxFile({
         pathSlug: 'test-post',
         frontmatter: {
@@ -3517,10 +3530,9 @@ describe('buildBlogPayload', () => {
     })
 
     it('stores null alternativeText when bio imageAlt is absent so author fallback works', async () => {
-      const { strapiUploadContext, updatedAltIds } =
-        createMockStrapiUploadContext({
-          '/uploads/img/jane.jpg': 7
-        })
+      const { strapiUploadContext, updatedAltIds } = createBlogUploadContext({
+        '/uploads/img/jane.jpg': 7
+      })
       const mdx = createMdxFile({
         pathSlug: 'test-post',
         frontmatter: {
@@ -3552,8 +3564,7 @@ describe('buildBlogPayload', () => {
     })
 
     it('sets media to null when the bio has no image', async () => {
-      const { strapiUploadContext, updatedAltIds } =
-        createMockStrapiUploadContext()
+      const { strapiUploadContext, updatedAltIds } = createBlogUploadContext()
       const mdx = createMdxFile({
         pathSlug: 'test-post',
         frontmatter: {
