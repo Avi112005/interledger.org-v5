@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { isDemoPathSlug, isDemoPathname, isPreviewPathname } from './demoPaths'
+import {
+  isDemoPathSlug,
+  isDemoPathname,
+  isExcludedFromSitemap,
+  isPreviewPathname
+} from './demoPaths'
 
 describe('isDemoPathSlug', () => {
   it('matches an exact demo slug', () => {
@@ -69,4 +74,32 @@ describe('isPreviewPathname', () => {
   it('does not false-positive on unrelated words containing "preview"', () => {
     expect(isPreviewPathname('/previewer')).toBe(false)
   })
+})
+
+describe('isExcludedFromSitemap', () => {
+  // Both were in the public sitemap: the old filter only matched `/preview`.
+  it.each(['/page-preview/', '/profile-preview/'])(
+    'excludes the %s preview route',
+    (pathname) => {
+      expect(isExcludedFromSitemap(pathname)).toBe(true)
+    }
+  )
+
+  it.each([
+    '/preview/page-preview/',
+    '/preview/hackathon-preview/',
+    '/blog/preview/',
+    '/es/blog/preview/',
+    '/demo-foundation-page/',
+    '/grant/demo-grant-page/'
+  ])('still excludes %s', (pathname) => {
+    expect(isExcludedFromSitemap(pathname)).toBe(true)
+  })
+
+  it.each(['/', '/about-us/', '/blog/', '/es/blog/', '/previewer/'])(
+    'keeps the public page %s',
+    (pathname) => {
+      expect(isExcludedFromSitemap(pathname)).toBe(false)
+    }
+  )
 })

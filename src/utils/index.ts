@@ -376,6 +376,7 @@ export {
 export {
   isDemoPathSlug,
   isDemoPathname,
+  isExcludedFromSitemap,
   isPreviewPathname
 } from './shared/demoPaths'
 

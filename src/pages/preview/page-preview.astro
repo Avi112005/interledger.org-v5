@@ -48,7 +48,7 @@ applyPreviewNoStore(Astro.response.headers)
 
 const documentId = Astro.url.searchParams.get('documentId')
 if (!documentId) {
-  return Astro.redirect('/404')
+  return Astro.rewrite('/preview/not-found')
 }
 
 // Build populate query for dynamic zone with nested relations
@@ -112,11 +112,11 @@ const response = await fetchStrapi<FoundationPagePreview>(
   `api/${apiId}/${documentId}?${populateParams.toString()}`
 )
 if (response instanceof Error) {
-  return Astro.redirect('/404')
+  return Astro.rewrite('/preview/not-found')
 }
 const page = response.data
 if (!page) {
-  return Astro.redirect('/404')
+  return Astro.rewrite('/preview/not-found')
 }
 
 const title = page.title || 'Preview'

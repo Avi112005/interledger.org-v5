@@ -34,7 +34,7 @@ applyPreviewNoStore(Astro.response.headers)
 
 const documentId = Astro.url.searchParams.get('documentId')
 if (!documentId) {
-  return Astro.redirect('/404')
+  return Astro.rewrite('/preview/not-found')
 }
 
 const populateParams = new URLSearchParams({
@@ -48,11 +48,11 @@ const response = await fetchStrapi<ProfilePreview>(
   `api/profile-pages/${documentId}?${populateParams.toString()}`
 )
 if (response instanceof Error) {
-  return Astro.redirect('/404')
+  return Astro.rewrite('/preview/not-found')
 }
 const profile = response.data
 if (!profile) {
-  return Astro.redirect('/404')
+  return Astro.rewrite('/preview/not-found')
 }
 
 const name = profile.name || 'Preview'
