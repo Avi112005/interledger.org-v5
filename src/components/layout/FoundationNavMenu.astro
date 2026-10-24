@@ -36,8 +36,12 @@ const submenuToggleAttrs = (groupLabel: string) =>
 
 const navButtonClass = `peer inline-flex items-center text-current whitespace-nowrap nav-bar:rounded-lg border-none bg-transparent transition-colors duration-200 group/submenu nav-bar:data-[active=true]:underline nav-bar:data-[active=true]:decoration-current nav-bar:data-[active=true]:decoration-2 nav-bar:data-[active=true]:underline-offset-8 focus-visible:outline-none w-full justify-between py-lg px-lg text-h4-md nav-bar:w-auto nav-bar:justify-start nav-bar:py-sm nav-bar:pl-lg nav-bar:pr-xs nav-bar:text-base`
 
-const navButtonChevronClass =
-  'ml-sm inline-flex size-2xl shrink-0 items-center justify-center origin-center text-neutral-75 transition-transform duration-150 motion-reduce:transition-none nav-bar:group-hover:rotate-180 group-data-[open=true]/submenu:rotate-180 nav-bar:size-5 nav-bar:text-current'
+// Drawer only: in the bar the chevron takes the link colour (`nav-bar:text-current`).
+const navButtonChevronColorClass = isDark
+  ? 'text-neutral-50'
+  : 'text-neutral-75'
+
+const navButtonChevronClass = `ml-sm inline-flex size-2xl shrink-0 items-center justify-center origin-center ${navButtonChevronColorClass} transition-transform duration-150 motion-reduce:transition-none nav-bar:group-hover:rotate-180 group-data-[open=true]/submenu:rotate-180 nav-bar:size-5 nav-bar:text-current`
 
 const panelBgClass = isDark
   ? 'nav-bar:bg-neutral-150 nav-bar:border nav-bar:border-neutral-100'
