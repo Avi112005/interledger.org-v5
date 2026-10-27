@@ -315,6 +315,8 @@ export const ui = {
     'homepageHero.cta_explore_tech': 'Explore our Tech',
     'homepageHero.cta_explore_grants': 'Explore our Grants',
     'homepageHero.cta_navigation': 'Featured actions',
+    'homepageHero.image_alt':
+      'Stefan Thomas, co-founder of the Interledger Protocol',
     'hackathonHero.logo.alt': 'Open Payments Hackathon by Interledger',
     'hackathonHero.cta_navigation': 'Featured actions',
     'animatedNetwork.problem.heading':
@@ -717,6 +719,7 @@ export const ui = {
     'homepageHero.cta_explore_tech': 'Explora nuestra tecnología',
     'homepageHero.cta_explore_grants': 'Explora nuestras subvenciones',
     'homepageHero.cta_navigation': 'Acciones destacadas',
+    'homepageHero.image_alt': '',
     'hackathonHero.logo.alt': 'Open Payments Hackathon by Interledger',
     'hackathonHero.cta_navigation': 'Acciones destacadas',
     'animatedNetwork.problem.heading':
