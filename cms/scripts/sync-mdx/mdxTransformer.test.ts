@@ -3383,23 +3383,44 @@ describe('buildBlogPayload', () => {
       )
     })
 
-    it('rejects a non-legacy post without a featureImage', async () => {
-      const { strapiUploadContext } = createBlogUploadContext()
-      const mdx = createMdxFile({
-        pathSlug: 'test-post',
-        frontmatter: blogFrontmatterWithoutFeatureImage
-      })
+    it.each([
+      ['missing', {}],
+      ['empty', { featureImage: '' }],
+      ['whitespace', { featureImage: '   ' }]
+    ])(
+      'rejects a non-legacy post whose featureImage is %s, naming the post',
+      async (_case, featureImageField) => {
+        const { strapiUploadContext } = createBlogUploadContext()
+        const mdx = createMdxFile({
+          pathSlug: 'test-post',
+          frontmatter: {
+            ...blogFrontmatterWithoutFeatureImage,
+            ...featureImageField
+          }
+        })
 
-      const payload = await buildBlogPayload(
-        foundationBlogFrontmatterSchema,
-        mdx,
-        strapiUploadContext
-      )
+        const payload = await buildBlogPayload(
+          foundationBlogFrontmatterSchema,
+          mdx,
+          strapiUploadContext
+        )
 
-      expect(payload).toBeInstanceOf(Error)
-      expect((payload as Error).message).toContain(
-        'featureImage is required (only legacy posts may omit it)'
-      )
+        expect(payload).toBeInstanceOf(Error)
+        expect((payload as Error).message).toBe(
+          '[test-post] featureImage is required (only legacy posts may omit it)'
+        )
+      }
+    )
+
+    // The shared schema is also the Astro collection schema, and a post
+    // without an image must not stop the build: only the sync rejects it.
+    it('leaves featureImage optional in the shared schema', () => {
+      expect(
+        foundationBlogFrontmatterSchema.safeParse({
+          ...blogFrontmatterWithoutFeatureImage,
+          pathSlug: 'test-post'
+        }).success
+      ).toBe(true)
     })
 
     it('falls back to the tech-thumbnail image when a legacy post has no featureImage', async () => {

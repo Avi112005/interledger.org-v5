@@ -1084,6 +1084,16 @@ describe('validateBlogFields', () => {
       ).toBeUndefined()
     })
 
+    // Strapi also accepts a reference with only an id, e.g. in a PUT body.
+    it('accepts a reference with only an id', () => {
+      expect(
+        validateBlogFields({
+          featureMedia: { image: { id: 378 } },
+          relatedArticles
+        })
+      ).toBeUndefined()
+    })
+
     it('does not require one on a legacy post', () => {
       expect(
         validateBlogFields({ legacy: true, relatedArticles })

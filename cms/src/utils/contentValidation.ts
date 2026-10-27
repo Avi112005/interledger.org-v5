@@ -16,7 +16,7 @@ import {
 } from './cardGrid'
 import { hasConflictingCtaFlags } from './ctaButtons'
 import { isCtaStripColor } from './ctaStrip'
-import { hasMediaValue } from './mdx'
+import { hasMediaValue, type MediaValue } from './mdx'
 
 export interface FieldError {
   path: Array<string | number>
@@ -768,21 +768,26 @@ export function validateAuthorBio(
   )
 }
 
+/** The fields of a blog post write that the feature image check reads. */
+interface BlogFeatureImageFields {
+  featureMedia?: { image?: MediaValue } | null
+  legacy?: boolean | null
+}
+
 /**
- * Require the desktop feature image on every blog post except legacy ones.
- * `featureMedia` and its `image` are both `required` in the schemas, but
- * Strapi only enforces the component: a `featureMedia` with no `image` is
- * saved on create and update alike, which is how a post went live without a
- * feature image (#805).
+ * Require the desktop feature image on every blog post except legacy ones, as
+ * defense in depth (#805). The admin form already blocks a save without one,
+ * but `featureMedia` and its `image` are only `required` in the schemas, and
+ * Strapi's server enforces just the component: an API write whose
+ * `featureMedia` has no `image` is saved on create and update alike.
  *
  * Legacy posts are the migrated developer blog posts, which have no feature
  * image. The admin never sends `legacy` (the field is hidden), but those posts
- * already carry the fallback image the MDX sync gives them, so they pass.
+ * already carry the fallback image the MDX sync gives them, so they pass. An
+ * API write with `legacy: true` skips the check on purpose: that is how the
+ * sync writes migrated posts, and editors can't set the field.
  */
-function validateBlogFeatureImage(post: {
-  featureMedia?: { image?: Parameters<typeof hasMediaValue>[0] } | null
-  legacy?: boolean | null
-}): FieldError[] {
+function validateBlogFeatureImage(post: BlogFeatureImageFields): FieldError[] {
   if (post.legacy === true) return []
   if (hasMediaValue(post.featureMedia?.image)) return []
   return [
@@ -802,12 +807,12 @@ function validateBlogFeatureImage(post: {
  *
  * Returns a `ValidationError` combining every missing field found, `undefined` otherwise.
  */
-export function validateBlogFields(post: {
-  articleBio?: { author: string | null }[]
-  relatedArticles?: { slug: string }[]
-  featureMedia?: { image?: Parameters<typeof hasMediaValue>[0] } | null
-  legacy?: boolean | null
-}): errors.ValidationError | undefined {
+export function validateBlogFields(
+  post: BlogFeatureImageFields & {
+    articleBio?: { author: string | null }[]
+    relatedArticles?: { slug: string }[]
+  }
+): errors.ValidationError | undefined {
   const fieldErrors: FieldError[] = []
   const related = post.relatedArticles
 

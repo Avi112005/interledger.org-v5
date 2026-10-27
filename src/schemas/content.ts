@@ -54,53 +54,42 @@ const AuthorBioSchema = z.object({
 
 export type AuthorBioType = z.infer<typeof AuthorBioSchema>
 
-export const foundationBlogFrontmatterSchema = z
-  .object({
-    title: z.string().min(1, 'title is required'),
-    description: z.string().min(1, 'description is required'),
-    date: z.coerce.date(),
-    // Optional manual entry — only set when a post has a meaningful editorial update.
-    lastUpdated: z.coerce.date().optional(),
-    pathSlug: pathSlugSchema(),
-    // Pins the post into the featured section at the top of the blog listing.
-    featured: z.boolean().default(false),
-    // Desktop feature image. Required unless `legacy` (see the refinement below).
-    featureImage: z.string().optional(),
-    featureImageAlt: z.string().nullable().optional(),
-    // Base64 LQIP blur placeholder, generated at CMS sync time. Optional: absent
-    // for content synced before this field existed, or when generation failed.
-    featureImageBlur: z.string().optional(),
-    // Optional mobile feature image; falls back to the desktop image when absent.
-    // Own alt lives on the media file (and in featureImageMobileAlt frontmatter);
-    // when omitted at render time, UI falls back to featureImageAlt.
-    featureImageMobile: z.string().optional(),
-    featureImageMobileAlt: z.string().nullable().optional(),
-    featureImageMobileBlur: z.string().optional(),
-    thumbnailImage: z.string().optional(),
-    thumbnailImageAlt: z.string().nullable().optional(),
-    articleBios: z.array(AuthorBioSchema).optional().default([]),
-    categories: z.array(z.enum(blogCategories)).default([]),
-    // Exactly 3 slugs of related posts (required for all frontmatter; Strapi also enforces this for editors).
-    relatedArticles: z.array(bareSlugSchema).length(3),
-    // Reserved for migrated v4 developer blog posts; lets them render without
-    // a feature image or thumbnail. Hidden from Strapi editors.
-    legacy: z.boolean().optional().default(false),
-    draft: draftSchema,
-    localizes: localizesSchema,
-    locale: z.string().optional()
-  })
-  // Blog listings and cards need a feature image. Strapi let a post be
-  // published without one (#805), so the MDX sync and the build reject it too
-  // instead of relying on Strapi alone. Whitespace counts as empty.
-  .superRefine((post, ctx) => {
-    if (post.legacy || post.featureImage?.trim()) return
-
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['featureImage'],
-      message: 'featureImage is required (only legacy posts may omit it)'
-    })
-  })
+export const foundationBlogFrontmatterSchema = z.object({
+  title: z.string().min(1, 'title is required'),
+  description: z.string().min(1, 'description is required'),
+  date: z.coerce.date(),
+  // Optional manual entry — only set when a post has a meaningful editorial update.
+  lastUpdated: z.coerce.date().optional(),
+  pathSlug: pathSlugSchema(),
+  // Pins the post into the featured section at the top of the blog listing.
+  featured: z.boolean().default(false),
+  // Desktop feature image. Optional here so a file without one does not stop
+  // the Astro build; Strapi and the MDX sync (`buildBlogPayload`) reject a
+  // non-legacy post without one.
+  featureImage: z.string().optional(),
+  featureImageAlt: z.string().nullable().optional(),
+  // Base64 LQIP blur placeholder, generated at CMS sync time. Optional: absent
+  // for content synced before this field existed, or when generation failed.
+  featureImageBlur: z.string().optional(),
+  // Optional mobile feature image; falls back to the desktop image when absent.
+  // Own alt lives on the media file (and in featureImageMobileAlt frontmatter);
+  // when omitted at render time, UI falls back to featureImageAlt.
+  featureImageMobile: z.string().optional(),
+  featureImageMobileAlt: z.string().nullable().optional(),
+  featureImageMobileBlur: z.string().optional(),
+  thumbnailImage: z.string().optional(),
+  thumbnailImageAlt: z.string().nullable().optional(),
+  articleBios: z.array(AuthorBioSchema).optional().default([]),
+  categories: z.array(z.enum(blogCategories)).default([]),
+  // Exactly 3 slugs of related posts (required for all frontmatter; Strapi also enforces this for editors).
+  relatedArticles: z.array(bareSlugSchema).length(3),
+  // Reserved for migrated v4 developer blog posts; lets them render without
+  // a feature image or thumbnail. Hidden from Strapi editors.
+  legacy: z.boolean().optional().default(false),
+  draft: draftSchema,
+  localizes: localizesSchema,
+  locale: z.string().optional()
+})
 
 export type FoundationBlogFrontmatterType = z.infer<
   typeof foundationBlogFrontmatterSchema

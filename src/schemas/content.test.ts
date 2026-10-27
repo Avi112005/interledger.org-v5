@@ -17,43 +17,11 @@ const base = {
   description: 'A short description',
   date: '2025-01-01',
   pathSlug: 'a-post',
-  featureImage: '/uploads/a-post.jpg',
   categories: ['News'],
   relatedArticles: ['one', 'two', 'three']
 }
 
 describe('foundationBlogFrontmatterSchema', () => {
-  describe('featureImage', () => {
-    const withoutFeatureImage: Record<string, unknown> = { ...base }
-    delete withoutFeatureImage.featureImage
-
-    it.each([
-      ['missing', withoutFeatureImage],
-      ['empty', { ...base, featureImage: '' }],
-      ['whitespace', { ...base, featureImage: '   ' }]
-    ])('rejects a post whose featureImage is %s', (_case, frontmatter) => {
-      const result = foundationBlogFrontmatterSchema.safeParse(frontmatter)
-
-      expect(result.success).toBe(false)
-      expect(result.error?.issues).toEqual([
-        expect.objectContaining({
-          path: ['featureImage'],
-          message: 'featureImage is required (only legacy posts may omit it)'
-        })
-      ])
-    })
-
-    it('accepts a legacy post without one', () => {
-      const parsed = foundationBlogFrontmatterSchema.parse({
-        ...withoutFeatureImage,
-        legacy: true
-      })
-
-      expect(parsed.featureImage).toBeUndefined()
-      expect(parsed.legacy).toBe(true)
-    })
-  })
-
   it('accepts a minimal valid post and applies defaults', () => {
     const parsed = foundationBlogFrontmatterSchema.parse(base)
 
