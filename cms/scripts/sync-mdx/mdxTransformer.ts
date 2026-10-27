@@ -1142,8 +1142,9 @@ export async function buildBlogPayload(
     // keeps it optional so a file without one doesn't stop the Astro build,
     // so the sync is where such a post is rejected. Whitespace counts as empty.
     if (!parsed.legacy && !parsed.featureImage?.trim()) {
+      // No slug prefix: the sync already logs the entry it was processing.
       throw new Error(
-        `[${mdx.pathSlug}] featureImage is required (only legacy posts may omit it)`
+        'featureImage is required (only legacy posts may omit it)'
       )
     }
 

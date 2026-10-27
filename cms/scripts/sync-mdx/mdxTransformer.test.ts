@@ -3388,7 +3388,7 @@ describe('buildBlogPayload', () => {
       ['empty', { featureImage: '' }],
       ['whitespace', { featureImage: '   ' }]
     ])(
-      'rejects a non-legacy post whose featureImage is %s, naming the post',
+      'rejects a non-legacy post whose featureImage is %s',
       async (_case, featureImageField) => {
         const { strapiUploadContext } = createBlogUploadContext()
         const mdx = createMdxFile({
@@ -3406,8 +3406,9 @@ describe('buildBlogPayload', () => {
         )
 
         expect(payload).toBeInstanceOf(Error)
+        // The sync prefixes the entry, e.g. "Error processing test-post (en): …"
         expect((payload as Error).message).toBe(
-          '[test-post] featureImage is required (only legacy posts may omit it)'
+          'featureImage is required (only legacy posts may omit it)'
         )
       }
     )
