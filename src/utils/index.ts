@@ -9,6 +9,8 @@
 export {
   stripTrailingSlash,
   addTrailingSlash,
+  isFilePath,
+  joinPagePath,
   trimSlashes,
   ensureLeadingSlash,
   hasUrlScheme,
@@ -114,6 +116,7 @@ export {
 } from './main/static-paths'
 export {
   type BreadcrumbItem,
+  buildHomeBreadcrumb,
   buildSectionEntryBreadcrumbs
 } from './main/breadcrumbs'
 export { getSectionPageLayout } from './main/sectionLayout'
@@ -124,7 +127,6 @@ export {
   getTermSlug,
   getTermUrl,
   translateTerm,
-  buildContentLangHrefs,
   paginateAllPosts,
   paginatePostsByTerm,
   ALL_TERM_SLUG,
@@ -265,6 +267,13 @@ export {
   SELF_SPACED_BLOCKS,
   getPreviewBlockGapClass
 } from './main/dynamicZoneSpacing'
+export {
+  TIMELINE_ACCENT_COUNT,
+  TIMELINE_DOT_CLASS,
+  timelineAccentIndex,
+  timelineEventOffsets,
+  resolveTimelineSections
+} from './main/timeline'
 
 // Main site: Summit
 export { sessionizeApiMap, YEARS, currentSummitYear } from './main/sessionize'
@@ -354,6 +363,7 @@ export {
   buildSectionNavLinkUmamiAttrs,
   escapeHtml,
   isSiteHostname,
+  stripKnownOrigin,
   umamiAttrsToHtml
 } from './main/umami'
 
