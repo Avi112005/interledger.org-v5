@@ -96,6 +96,16 @@ describe('isExcludedFromSitemap', () => {
     expect(isExcludedFromSitemap(pathname)).toBe(true)
   })
 
+  // Side effect of sharing the preview rule: any segment ending in `-preview`
+  // is excluded, not only the preview routes. No page slug ends that way
+  // today, but a page like this one would silently leave the sitemap.
+  it.each(['/grant/program-preview/', '/es/grant/program-preview/'])(
+    'also excludes a content page whose slug ends in -preview: %s',
+    (pathname) => {
+      expect(isExcludedFromSitemap(pathname)).toBe(true)
+    }
+  )
+
   it.each(['/', '/about-us/', '/blog/', '/es/blog/', '/previewer/'])(
     'keeps the public page %s',
     (pathname) => {

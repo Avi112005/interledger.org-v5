@@ -103,6 +103,7 @@ export { translationMap } from './main/translationMapData'
 export { getNavigation } from './main/navigation'
 export { fetchStrapi, type StrapiResponse } from './main/fetchStrapi'
 export { applyPreviewNoStore } from './main/cache'
+export { logPreviewFetchError } from './main/previewLog'
 
 // Main site: Static paths
 export { CONTENT, CONTENT_ROOT } from './main/contentCollections'
